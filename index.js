@@ -10,6 +10,7 @@ import geminiResponse from "./gemini.js";
 
 const app = express();
 
+
 // Allowed origins (localhost + Vercel frontend)
 const allowedOrigins = [
   "http://localhost:5173",
