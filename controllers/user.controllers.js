@@ -21,21 +21,32 @@ export const getCurrentUser = async (req, res) => {
 export const updateAssistant = async (req, res) => {
   try {
     const { assistantName, imageUrl } = req.body;
-    let assistantImage;
+    let assistantImage = imageUrl || null;
     if (req.file) {
-      assistantImage = await uploadOnCloudinary(req.file.path);
-    } else {
-      assistantImage = imageUrl;
+      try {
+        assistantImage = await uploadOnCloudinary(req.file.path);
+      } catch (cloudErr) {
+        console.error("Cloudinary upload failed:", cloudErr);
+        assistantImage = null;
+      }
     }
+
+    const updateFields = { assistantName };
+    if (assistantImage) updateFields.assistantImage = assistantImage;
 
     const user = await User.findByIdAndUpdate(
       req.userId,
-      { assistantName, assistantImage },
+      updateFields,
       { new: true }
     ).select("-password");
 
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
     return res.status(200).json(user);
   } catch (error) {
+    console.error("updateAssistant error:", error);
     return res.status(400).json({ message: "updateAssistantError user error" });
   }
 };
